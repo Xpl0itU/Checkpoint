@@ -24,44 +24,28 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef COMMON_HPP
-#define COMMON_HPP
+#include "InfoOverlay.hpp"
 
-#include <algorithm>
-#ifndef __WIIU__
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#endif
-#include <codecvt>
-#include <cstdio>
-#include <locale>
-#include <memory>
-#include <stdarg.h>
-#include <string.h>
-#include <string>
-#include <time.h>
-#include <unistd.h>
-
-#define ATEXIT(func) atexit((void (*)())func)
-
-namespace DateTime {
-    std::string timeStr(void);
-    std::string dateTimeStr(void);
-    std::string logDateTime(void);
+InfoOverlay::InfoOverlay(Screen& screen, const std::string& mtext) : Overlay(screen)
+{
+    text = mtext;
+    SDLH_GetTextDimensions(28, text.c_str(), &textw, &texth);
+    button = std::make_unique<Clickable>(322, 462, 636, 56, theme().c3, theme().c6, "OK", true);
+    button->selected(true);
 }
 
-namespace StringUtils {
-    bool containsInvalidChar(const std::string& str);
-    std::string escapeJson(const std::string& s);
-    std::string format(const std::string fmt_str, ...);
-    std::string removeForbiddenCharacters(std::string src);
-    std::string UTF16toUTF8(const std::u16string& src);
-    void ltrim(std::string& s);
-    void rtrim(std::string& s);
-    void trim(std::string& s);
+void InfoOverlay::draw(void) const
+{
+    SDLH_DrawRect(0, 0, 1280, 720, COLOR_OVERLAY);
+    SDLH_DrawRect(320, 200, 640, 260, theme().c3);
+    SDLH_DrawText(28, ceilf(1280 - textw) / 2, 200 + ceilf((260 - texth) / 2), theme().c6, text.c_str());
+    button->draw(28, COLOR_BLUE);
+    drawPulsingOutline(322, 462, 636, 56, 4, COLOR_BLUE);
 }
 
-char* getConsoleIP(void);
-
-#endif
+void InfoOverlay::update(touchPosition* touch)
+{
+    if (button->released() || Input::getDown() & (Input::BUTTON_A | Input::BUTTON_B)) {
+        screen.removeOverlay();
+    }
+}

@@ -71,6 +71,8 @@ private:
     const std::string mPath = "sdmc:/3ds/Checkpoint/checkpoint.log";
 #elif defined(__SWITCH__)
     const std::string mPath = "/switch/Checkpoint/checkpoint.log";
+#elif defined(__WIIU__)
+    const std::string mPath = "wiiu/Checkpoint/checkpoint.log";
 #else
     const std::string mPath = "checkpoint.log";
 #endif

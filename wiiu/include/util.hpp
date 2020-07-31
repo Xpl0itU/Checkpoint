@@ -24,46 +24,42 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef UTIL_HPP
+#define UTIL_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
+#include "account.hpp"
+#include "common.hpp"
+#include "io.hpp"
 #include "input.hpp"
-#endif
-#include <memory>
+#include <sys/stat.h>
+#include <tuple>
 
-class Overlay;
+#include <romfs-wiiu.h>
+#include <whb/sdcard.h>
+#include <coreinit/mcp.h>
+#include <coreinit/ios.h>
+#include <coreinit/thread.h>
+#include <coreinit/time.h>
+#include <nn/acp.h>
 
-class Screen {
-    friend class Overlay;
+#include <nn/act.h>
 
-public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+#include <iosuhax.h>
+#include <iosuhax_devoptab.h>
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
-};
+void servicesExit(void);
+int32_t servicesInit(void);
+void blinkLed(uint8_t times);
+
+bool try_init_iosuhax(void);
+void try_shutdown_iosuhax(void);
+
+nn::act::SlotNo accountIdToSlotNo(uint32_t accountId);
+
+namespace StringUtils {
+    std::string removeAccents(std::string str);
+    std::string removeNotAscii(std::string str);
+    std::u16string UTF8toUTF16(const char* src);
+}
 
 #endif

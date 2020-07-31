@@ -24,46 +24,25 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef MAIN_HPP
+#define MAIN_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
-#include "input.hpp"
-#endif
+#include "Screen.hpp"
+#include "account.hpp"
+#include "title.hpp"
+#include "util.hpp"
 #include <memory>
 
-class Overlay;
+typedef enum { SORT_ALPHA, SORT_LAST_PLAYED, SORT_PLAY_TIME, SORT_MODES_COUNT } sort_t;
 
-class Screen {
-    friend class Overlay;
+inline float g_currentTime = 0;
+inline AccountUid g_currentUId;
+inline bool g_backupScrollEnabled       = 0;
+inline std::shared_ptr<Screen> g_screen = nullptr;
+inline uint32_t g_username_dotsize;
+inline sort_t g_sortMode = SORT_ALPHA;
 
-public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
-
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
-};
+inline std::string g_currentFile = "";
+inline bool g_isTransferringFile = false;
 
 #endif

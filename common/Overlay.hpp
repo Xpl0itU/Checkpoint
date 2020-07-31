@@ -44,7 +44,7 @@ public:
 #if defined(_3DS)
     virtual void drawTop() const    = 0;
     virtual void drawBottom() const = 0;
-#elif defined(__SWITCH__)
+#elif defined(__SWITCH__) || defined(__WIIU__)
     virtual void draw() const = 0;
 #endif
 

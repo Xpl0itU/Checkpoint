@@ -24,46 +24,49 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef CONFIGHANDLER_HPP
+#define CONFIGHANDLER_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
-#include "input.hpp"
-#endif
-#include <memory>
+#include "io.hpp"
+#include "util.hpp"
+#include "json.hpp"
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
-class Overlay;
+#define CONFIG_VERSION 4
 
-class Screen {
-    friend class Overlay;
-
+class Configuration {
 public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    static Configuration& getInstance(void)
+    {
+        static Configuration mConfiguration;
+        return mConfiguration;
+    }
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+    bool filter(uint64_t id);
+    bool favorite(uint64_t id);
+    std::vector<std::string> additionalSaveFolders(uint64_t id);
+    void save(void);
+    void load(void);
+    void parse(void);
+    const char* c_str(void);
+    nlohmann::json getJson(void);
+
+    const std::string BASEPATH = "wiiu/Checkpoint/config.json";
+
+private:
+    Configuration(void);
+    ~Configuration(void);
+
+    void store(void);
+
+    Configuration(Configuration const&) = delete;
+    void operator=(Configuration const&) = delete;
+
+    nlohmann::json mJson;
+    std::unordered_set<uint64_t> mFilterIds, mFavoriteIds;
+    std::unordered_map<uint64_t, std::vector<std::string>> mAdditionalSaveFolders;
 };
 
 #endif

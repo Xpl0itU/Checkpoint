@@ -45,7 +45,7 @@ void Screen::doDrawBottom() const
     }
 }
 
-#elif defined(__SWITCH__)
+#elif defined(__SWITCH__) || defined(__WIIU__)
 
 void Screen::doDraw() const
 {

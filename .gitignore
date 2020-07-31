@@ -7,4 +7,6 @@ cppcheck.log
 switch/build/
 switch/out/
 switch/romfs/cheats/
+wiiu/build/
+wiiu/out/
 .vscode/

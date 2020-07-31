@@ -24,44 +24,54 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef COMMON_HPP
-#define COMMON_HPP
+#include "directory.hpp"
 
-#include <algorithm>
-#ifndef __WIIU__
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#endif
-#include <codecvt>
-#include <cstdio>
-#include <locale>
-#include <memory>
-#include <stdarg.h>
-#include <string.h>
-#include <string>
-#include <time.h>
-#include <unistd.h>
+Directory::Directory(const std::string& root)
+{
+    mGood  = false;
+    mError = 0;
+    mList.clear();
 
-#define ATEXIT(func) atexit((void (*)())func)
+    DIR* dir = opendir(root.c_str());
+    struct dirent* ent;
 
-namespace DateTime {
-    std::string timeStr(void);
-    std::string dateTimeStr(void);
-    std::string logDateTime(void);
+    if (dir == NULL) {
+        mError = (int32_t)errno;
+    }
+    else {
+        while ((ent = readdir(dir))) {
+            std::string name         = std::string(ent->d_name);
+            bool directory           = ent->d_type == DT_DIR;
+            struct DirectoryEntry de = {name, directory};
+            mList.push_back(de);
+        }
+    }
+
+    closedir(dir);
+    mGood = true;
 }
 
-namespace StringUtils {
-    bool containsInvalidChar(const std::string& str);
-    std::string escapeJson(const std::string& s);
-    std::string format(const std::string fmt_str, ...);
-    std::string removeForbiddenCharacters(std::string src);
-    std::string UTF16toUTF8(const std::u16string& src);
-    void ltrim(std::string& s);
-    void rtrim(std::string& s);
-    void trim(std::string& s);
+int32_t Directory::error(void)
+{
+    return mError;
 }
 
-char* getConsoleIP(void);
+bool Directory::good(void)
+{
+    return mGood && mError == 0;
+}
 
-#endif
+std::string Directory::entry(size_t index)
+{
+    return index < mList.size() ? mList.at(index).name : "";
+}
+
+bool Directory::folder(size_t index)
+{
+    return index < mList.size() ? mList.at(index).directory : false;
+}
+
+size_t Directory::size(void)
+{
+    return mList.size();
+}

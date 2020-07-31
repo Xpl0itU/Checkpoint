@@ -24,46 +24,47 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef KEYBOARDMANAGER_HPP
+#define KEYBOARDMANAGER_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
 #include "input.hpp"
-#endif
-#include <memory>
+#include "SDLHelper.hpp"
+#include <nn/swkbd.h>
+#include <string>
+#include <utility>
+#include <locale>
+#include <codecvt>
 
-class Overlay;
-
-class Screen {
-    friend class Overlay;
-
+class KeyboardManager {
 public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    static KeyboardManager& get(void)
+    {
+        static KeyboardManager mSingleton;
+        return mSingleton;
+    }
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+    KeyboardManager(KeyboardManager const&) = delete;
+    void operator=(KeyboardManager const&) = delete;
+
+    bool init();
+    void shutdown();
+    std::pair<bool, std::string> keyboard(const std::string& suggestion);
+    bool isInitialized() { return initialized; }
+
+    static const size_t CUSTOM_PATH_LEN = 49;
+
+private:
+    KeyboardManager(void);
+    virtual ~KeyboardManager(void){};
+
+    void update();
+    void hide();
+
+    bool hidden() { return nn::swkbd::GetStateInputForm() == nn::swkbd::State::Hidden; }
+
+    nn::swkbd::CreateArg createArg;
+    nn::swkbd::AppearArg appearArg;
+    bool initialized = false;
 };
 
 #endif

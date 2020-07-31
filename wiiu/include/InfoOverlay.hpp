@@ -24,46 +24,30 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef INFOOVERLAY_HPP
+#define INFOOVERLAY_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
+#include "Overlay.hpp"
+#include "SDLHelper.hpp"
+#include "clickable.hpp"
+#include "colors.hpp"
 #include "input.hpp"
-#endif
 #include <memory>
+#include <string>
 
-class Overlay;
+class Clickable;
 
-class Screen {
-    friend class Overlay;
-
+class InfoOverlay : public Overlay {
 public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    InfoOverlay(Screen& screen, const std::string& mtext);
+    ~InfoOverlay(void) {}
+    void draw(void) const override;
+    void update(touchPosition* touch) override;
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+private:
+    u32 textw, texth;
+    std::string text;
+    std::unique_ptr<Clickable> button;
 };
 
 #endif

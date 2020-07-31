@@ -24,46 +24,27 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef CLICKABLE_HPP
+#define CLICKABLE_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
+#include "SDLHelper.hpp"
+#include "iclickable.hpp"
+#include "main.hpp"
 #include "input.hpp"
-#endif
-#include <memory>
+#include <string>
 
-class Overlay;
-
-class Screen {
-    friend class Overlay;
-
+class Clickable : public IClickable<SDL_Color> {
 public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    Clickable(int x, int y, u16 w, u16 h, SDL_Color colorBg, SDL_Color colorText, const std::string& message, bool centered)
+        : IClickable(x, y, w, h, colorBg, colorText, message, centered)
+    {
+    }
+    virtual ~Clickable(void){};
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+    void draw(float font, SDL_Color overlay) override;
+    bool held(void) override;
+    bool released(void) override;
+    void drawOutline(SDL_Color color) override;
 };
 
 #endif

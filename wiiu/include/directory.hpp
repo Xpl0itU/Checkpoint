@@ -24,46 +24,34 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef DIRECTORY_HPP
+#define DIRECTORY_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
-#include "input.hpp"
-#endif
-#include <memory>
+#include <dirent.h>
+#include <errno.h>
+#include <string>
+#include <vector>
 
-class Overlay;
+struct DirectoryEntry {
+    std::string name;
+    bool directory;
+};
 
-class Screen {
-    friend class Overlay;
-
+class Directory {
 public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    Directory(const std::string& root);
+    ~Directory(void){};
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+    int32_t error(void);
+    std::string entry(size_t index);
+    bool folder(size_t index);
+    bool good(void);
+    size_t size(void);
+
+private:
+    std::vector<struct DirectoryEntry> mList;
+    int32_t mError;
+    bool mGood;
 };
 
 #endif

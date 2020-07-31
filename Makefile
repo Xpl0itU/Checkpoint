@@ -1,4 +1,4 @@
-SUBDIRS = 3ds switch
+SUBDIRS = 3ds switch wiiu
 
 VERSION_MAJOR	:=	3
 VERSION_MINOR	:=	7
@@ -18,6 +18,9 @@ clean:
 
 switch: switch_cheats
 	@$(MAKE) -C switch VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR} VERSION_MICRO=${VERSION_MICRO} GIT_REV=${GIT_REV} CHEAT_SIZE_DECOMPRESSED=$(shell stat -t "sharkive/build/switch.json" | awk '{print $$2}')
+
+wiiu:
+	@$(MAKE) -C wiiu VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR} VERSION_MICRO=${VERSION_MICRO} GIT_REV=${GIT_REV}
 
 format:
 	@for dir in $(SUBDIRS); do $(MAKE) -C $$dir format; done

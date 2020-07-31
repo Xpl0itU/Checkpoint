@@ -24,44 +24,30 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef COMMON_HPP
-#define COMMON_HPP
+#include "colors.hpp"
 
-#include <algorithm>
-#ifndef __WIIU__
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#endif
-#include <codecvt>
-#include <cstdio>
-#include <locale>
-#include <memory>
-#include <stdarg.h>
-#include <string.h>
-#include <string>
-#include <time.h>
-#include <unistd.h>
+static const struct Theme defaultTheme = {
+    COLOR_BLACK,       // c0
+    COLOR_GREY_BG,     // c1
+    COLOR_GREY_DARKER, // c2
+    COLOR_GREY_DARK,   // c3
+    COLOR_GREY_MEDIUM, // c4
+    COLOR_GREY_LIGHT,  // c5
+    COLOR_WHITE        // c6
+};
 
-#define ATEXIT(func) atexit((void (*)())func)
+static struct Theme currentTheme = defaultTheme;
 
-namespace DateTime {
-    std::string timeStr(void);
-    std::string dateTimeStr(void);
-    std::string logDateTime(void);
+void theme(int t)
+{
+    switch (t) {
+        default:
+            currentTheme = defaultTheme;
+            break;
+    }
 }
 
-namespace StringUtils {
-    bool containsInvalidChar(const std::string& str);
-    std::string escapeJson(const std::string& s);
-    std::string format(const std::string fmt_str, ...);
-    std::string removeForbiddenCharacters(std::string src);
-    std::string UTF16toUTF8(const std::u16string& src);
-    void ltrim(std::string& s);
-    void rtrim(std::string& s);
-    void trim(std::string& s);
+struct Theme theme(void)
+{
+    return currentTheme;
 }
-
-char* getConsoleIP(void);
-
-#endif

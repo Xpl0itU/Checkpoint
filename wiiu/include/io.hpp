@@ -24,46 +24,40 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef IO_HPP
+#define IO_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
-#include "input.hpp"
-#endif
-#include <memory>
+#include "KeyboardManager.hpp"
+#include "account.hpp"
+#include "directory.hpp"
+#include "multiselection.hpp"
+#include "title.hpp"
+#include "util.hpp"
+#include <dirent.h>
+#include <sys/stat.h>
+#include <tuple>
+#include <unistd.h>
+#include <utility>
 
-class Overlay;
+#define BUFFER_SIZE 0x80000
 
-class Screen {
-    friend class Overlay;
+typedef uint32_t AccountUid;
 
-public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+namespace io {
+    struct DirEntry {
+        uint8_t type;
+        std::string name;
+    };
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
-};
+    std::tuple<bool, int32_t, std::string> backup(size_t index, AccountUid uid, size_t cellIndex);
+    std::tuple<bool, int32_t, std::string> restore(size_t index, AccountUid uid, size_t cellIndex, const std::string& nameFromCell);
+
+    int32_t copyDirectory(const std::string& srcPath, const std::string& dstPath);
+    void copyFile(const std::string& srcPath, const std::string& dstPath);
+    int32_t createDirectory(const std::string& path);
+    int32_t deleteFolderRecursively(const std::string& path);
+    bool directoryExists(const std::string& path);
+    bool fileExists(const std::string& path);
+}
 
 #endif

@@ -24,46 +24,53 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef MAINSCREEN_HPP
+#define MAINSCREEN_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
-#include "input.hpp"
-#endif
-#include <memory>
+#include "ErrorOverlay.hpp"
+#include "InfoOverlay.hpp"
+#include "Screen.hpp"
+#include "YesNoOverlay.hpp"
+#include "AccountSelectOverlay.hpp"
+#include "clickable.hpp"
+#include "hid.hpp"
+#include "io.hpp"
+#include "main.hpp"
+#include "multiselection.hpp"
+#include "scrollable.hpp"
+#include <tuple>
 
-class Overlay;
+typedef enum { TITLES, CELLS } entryType_t;
 
-class Screen {
-    friend class Overlay;
+class Clickable;
+class Scrollable;
 
+class MainScreen : public Screen {
 public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    MainScreen(void);
+    void draw(void) const override;
+    void update(touchPosition* touch) override;
 
 protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+    int selectorX(size_t i) const;
+    int selectorY(size_t i) const;
+    void updateSelector(touchPosition* touch);
+    void handleEvents(touchPosition* touch);
+    std::string nameFromCell(size_t index) const;
+    void entryType(entryType_t type);
+    size_t index(entryType_t type) const;
+    void index(entryType_t type, size_t i);
+    void resetIndex(entryType_t type);
+    void updateButtons(void);
+    std::string sortMode(void) const;
+
+private:
+    entryType_t type;
+    int selectionTimer;
+    Hid<HidDirection::HORIZONTAL, HidDirection::HORIZONTAL> hid;
+    std::unique_ptr<Scrollable> backupList;
+    std::unique_ptr<Clickable> buttonBackup, buttonRestore;
+    char ver[8];
 };
 
 #endif

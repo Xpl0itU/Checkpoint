@@ -26,32 +26,58 @@
 
 #include "common.hpp"
 
+#ifdef __WIIU__
+#include <coreinit/time.h>
+#endif
+
 std::string DateTime::timeStr(void)
 {
+#ifndef __WIIU__
     time_t unixTime;
     struct tm timeStruct;
     time(&unixTime);
     localtime_r(&unixTime, &timeStruct);
+#else
+    OSCalendarTime timeStruct;
+    OSTime time = OSGetTime();
+    OSTicksToCalendarTime(time, &timeStruct);
+#endif
     return StringUtils::format("%02i:%02i:%02i", timeStruct.tm_hour, timeStruct.tm_min, timeStruct.tm_sec);
 }
 
 std::string DateTime::dateTimeStr(void)
 {
+    int yearOffset = 0;
+#ifndef __WIIU__
+    yearOffset = 1900;
     time_t unixTime;
     struct tm timeStruct;
     time(&unixTime);
     localtime_r(&unixTime, &timeStruct);
-    return StringUtils::format("%04i%02i%02i-%02i%02i%02i", timeStruct.tm_year + 1900, timeStruct.tm_mon + 1, timeStruct.tm_mday, timeStruct.tm_hour,
+#else
+    OSCalendarTime timeStruct;
+    OSTime time = OSGetTime();
+    OSTicksToCalendarTime(time, &timeStruct);
+#endif
+    return StringUtils::format("%04i%02i%02i-%02i%02i%02i", timeStruct.tm_year + yearOffset, timeStruct.tm_mon + 1, timeStruct.tm_mday, timeStruct.tm_hour,
         timeStruct.tm_min, timeStruct.tm_sec);
 }
 
 std::string DateTime::logDateTime(void)
 {
+    int yearOffset = 0;
+#ifndef __WIIU__
+    yearOffset = 1900;
     time_t unixTime;
     struct tm timeStruct;
     time(&unixTime);
     localtime_r(&unixTime, &timeStruct);
-    return StringUtils::format("%04i-%02i-%02i %02i:%02i:%02i", timeStruct.tm_year + 1900, timeStruct.tm_mon + 1, timeStruct.tm_mday,
+#else
+    OSCalendarTime timeStruct;
+    OSTime time = OSGetTime();
+    OSTicksToCalendarTime(time, &timeStruct);
+#endif
+    return StringUtils::format("%04i-%02i-%02i %02i:%02i:%02i", timeStruct.tm_year + yearOffset, timeStruct.tm_mon + 1, timeStruct.tm_mday,
         timeStruct.tm_hour, timeStruct.tm_min, timeStruct.tm_sec);
 }
 
@@ -118,7 +144,11 @@ void StringUtils::trim(std::string& s)
 
 char* getConsoleIP(void)
 {
+#ifndef __WIIU__
     struct in_addr in;
     in.s_addr = gethostid();
     return inet_ntoa(in);
+#else
+    return NULL;
+#endif
 }

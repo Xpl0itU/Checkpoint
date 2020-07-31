@@ -24,46 +24,42 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
-
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
+#include "main.hpp"
+#include "MainScreen.hpp"
 #include "input.hpp"
-#endif
-#include <memory>
+#include <whb/proc.h>
 
-class Overlay;
+int main(void)
+{
+    WHBProcInit();
 
-class Screen {
-    friend class Overlay;
+    if (servicesInit() != 0)
+    {
+        servicesExit();
+        WHBProcShutdown();
+        return 0;
+    }
 
-public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    g_screen = std::make_unique<MainScreen>();
 
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
-};
+    loadTitles();
 
-#endif
+    // set g_currentUId to the current user
+    g_currentUId = nn::act::GetPersistentId();
+
+    while (WHBProcIsRunning())
+    {
+        g_screen->doDraw();
+
+        Input::update();
+        touchPosition touch = Input::getTouch();
+        g_screen->doUpdate(&touch);
+        
+        SDLH_Render();
+    }
+
+    servicesExit();
+
+    WHBProcShutdown();
+    return 0;
+}

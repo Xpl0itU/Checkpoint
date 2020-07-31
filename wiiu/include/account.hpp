@@ -24,46 +24,38 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef ACCOUNT_HPP
+#define ACCOUNT_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
-#include "input.hpp"
-#endif
-#include <memory>
+#include "SDLHelper.hpp"
+#include <nn/act.h>
+#include <map>
+#include <string.h>
+#include <string>
+#include <vector>
 
-class Overlay;
+#define COMMONSAVE_ID 0xFFFFFFFF
+#define USER_ICON_SIZE 64
+#define MAX_IMAGE_SIZE 1024 * 70 // 70 Kib should be enough
+typedef uint32_t AccountUid;
 
-class Screen {
-    friend class Overlay;
-
-public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
-
-protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+struct User {
+    AccountUid id;
+    std::string name;
+    std::string shortName;
+    SDL_Texture* icon;
 };
+
+namespace Account {
+    bool init(void);
+    void exit(void);
+    User getUser(AccountUid id);
+    User getUserFromSlot(nn::act::SlotNo slot);
+
+    std::vector<AccountUid> ids(void);
+    SDL_Texture* icon(AccountUid id);
+    std::string username(AccountUid id);
+    std::string shortName(AccountUid id);
+}
 
 #endif

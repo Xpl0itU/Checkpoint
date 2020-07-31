@@ -24,46 +24,31 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef SCROLLABLE_HPP
+#define SCROLLABLE_HPP
 
-#if defined(_3DS)
-#include <3ds.h>
-#elif defined(__SWITCH__)
-#include <switch.h>
-#elif defined(__WIIU__)
-#include "input.hpp"
-#endif
-#include <memory>
+#include "SDLHelper.hpp"
+#include "clickable.hpp"
+#include "colors.hpp"
+#include "hid.hpp"
+#include "iscrollable.hpp"
+#include <vector>
 
-class Overlay;
-
-class Screen {
-    friend class Overlay;
-
+class Scrollable : public IScrollable<SDL_Color> {
 public:
-    Screen(void) {}
-    virtual ~Screen(void) {}
-    // Call currentOverlay->update if it exists, and update if it doesn't
-    virtual void doUpdate(touchPosition* touch) final;
-    virtual void update(touchPosition* touch) = 0;
-    // Call draw, then currentOverlay->draw if it exists
-#if defined(_3DS)
-    virtual void doDrawTop(void) const final;
-    virtual void doDrawBottom(void) const final;
-    virtual void drawTop(void) const    = 0;
-    virtual void drawBottom(void) const = 0;
-#elif defined(__SWITCH__) || defined(__WIIU__)
-    virtual void doDraw() const final;
-    virtual void draw() const = 0;
-#endif
-    void removeOverlay() { currentOverlay = nullptr; }
-    void setOverlay(std::shared_ptr<Overlay>& overlay) { currentOverlay = overlay; }
+    Scrollable(u32 x, u32 y, u32 w, u32 h, size_t visibleEntries) : IScrollable(x, y, w, h, visibleEntries), mHid(visibleEntries, 1) {}
+
+    virtual ~Scrollable(void) {}
+
+    void draw(bool condition = false) override;
+    void setIndex(size_t i);
+    void push_back(SDL_Color color, SDL_Color colorMessage, const std::string& message, bool selected) override;
+    void resetIndex(void) override;
+    void updateSelection(void) override;
+    void text(size_t i, const std::string& v);
 
 protected:
-    // No point in restricting this to only being editable during update, especially since it's drawn afterwards. Allows setting it before the first
-    // draw loop is done
-    mutable std::shared_ptr<Overlay> currentOverlay = nullptr;
+    Hid<HidDirection::VERTICAL, HidDirection::HORIZONTAL> mHid;
 };
 
 #endif
