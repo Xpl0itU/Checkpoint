@@ -25,6 +25,7 @@
  */
 
 #include "title.hpp"
+#include <stdint.h>
 
 static std::unordered_map<AccountUid, std::vector<Title>> titles;
 static std::unordered_map<uint64_t, SDL_Texture*> icons;
@@ -261,10 +262,14 @@ void loadTitles()
 
                         mxml_node_t *xt = NULL;
                         xt = mxmlLoadString(NULL, metaXml, MXML_OPAQUE_CALLBACK);
+                        if(xt == NULL)
+                            continue;
                         mxml_node_t *xm = mxmlGetFirstChild(xt);
+                        if(xt == NULL)
+                            continue;
                         mxml_node_t *xn = mxmlFindElement(xm, xt, "title_id", "type", "hexBinary", MXML_DESCEND);
                         if(xn) {
-                            titleId = (uint64_t)mxmlGetOpaque(xn);
+                            titleId = strtoull(mxmlGetOpaque(xn), NULL, 16);
                         }
 
                         if (Configuration::getInstance().filter(titleId)) {
@@ -280,6 +285,7 @@ void loadTitles()
                         if(xn) {
                             titlePublisher.assign(mxmlGetOpaque(xn));
                         }
+                        mxmlDelete(xt);
                     }
                     else {
                         Logger::getInstance().log(Logger::WARN, "No meta.xml for save " + path + dir.entry(i));
