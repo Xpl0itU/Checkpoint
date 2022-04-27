@@ -265,7 +265,7 @@ void loadTitles()
                         if(xt == NULL)
                             continue;
                         mxml_node_t *xm = mxmlGetFirstChild(xt);
-                        if(xt == NULL)
+                        if(xm == NULL)
                             continue;
                         mxml_node_t *xn = mxmlFindElement(xm, xt, "title_id", "type", "hexBinary", MXML_DESCEND);
                         if(xn) {
