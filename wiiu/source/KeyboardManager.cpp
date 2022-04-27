@@ -36,17 +36,15 @@ bool KeyboardManager::init()
     createArg.workMemory = malloc(nn::swkbd::GetWorkMemorySize(0));
     createArg.fsClient = (FSClient*) malloc(sizeof(FSClient));
 
-    if (!createArg.workMemory || !createArg.fsClient)
-    {
+    if (!createArg.workMemory || !createArg.fsClient) {
         free(createArg.workMemory);
         free(createArg.fsClient);
         return false;
     }
 
-    FSAddClient(createArg.fsClient, 0);
+    FSAddClient(createArg.fsClient, FS_ERROR_FLAG_NONE);
 
-    if (nn::swkbd::Create(createArg))
-    {
+    if (nn::swkbd::Create(createArg)) {
         initialized = true;
         return true;
     }
@@ -60,9 +58,8 @@ void KeyboardManager::shutdown()
     free(createArg.workMemory);
     createArg.workMemory = nullptr;
 
-    if (createArg.fsClient)
-    {
-        FSDelClient(createArg.fsClient, 0);
+    if (createArg.fsClient) {
+        FSDelClient(createArg.fsClient, FS_ERROR_FLAG_NONE);
         free(createArg.fsClient);
         createArg.fsClient = nullptr;
     }
@@ -72,8 +69,7 @@ void KeyboardManager::shutdown()
 
 std::pair<bool, std::string> KeyboardManager::keyboard(const std::string& suggestion)
 {
-    if (nn::swkbd::AppearInputForm(appearArg))
-    {
+    if (nn::swkbd::AppearInputForm(appearArg)) {
         // convert the suggestion to a char16_t
         char16_t wsuggestion[suggestion.size() + 1] = {0};
         for (unsigned int i = 0; i < suggestion.size() + 1; i++) {
@@ -82,19 +78,16 @@ std::pair<bool, std::string> KeyboardManager::keyboard(const std::string& sugges
 
         nn::swkbd::SetInputFormString(wsuggestion);
 
-        for (;;)
-        {
+        for (;;) {
             update();
 
-            if (nn::swkbd::IsDecideOkButton(nullptr))
-            {
+            if (nn::swkbd::IsDecideOkButton(nullptr)) {
                 std::u16string output(nn::swkbd::GetInputFormString());
                 hide();
                 return std::make_pair(true, std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(output));
             }
 
-            if (nn::swkbd::IsDecideCancelButton(nullptr))
-            {
+            if (nn::swkbd::IsDecideCancelButton(nullptr)) {
                 hide();
                 break;
             }

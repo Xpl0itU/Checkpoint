@@ -53,6 +53,7 @@ void blinkLed(uint8_t times);
 
 bool try_init_iosuhax(void);
 void try_shutdown_iosuhax(void);
+int flushVolume(const char* volumePath);
 
 nn::act::SlotNo accountIdToSlotNo(uint32_t accountId);
 

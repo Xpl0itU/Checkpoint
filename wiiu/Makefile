@@ -53,7 +53,7 @@ LIBS	:= -lSDL2_ttf -lSDL2_image -lSDL2 -lfreetype -ljpeg -lpng -lbz2 -lz -liosuh
 # list of directories containing libraries, this must be the top level
 # containing include and lib
 #-------------------------------------------------------------------------------
-LIBDIRS	:= $(WUT_ROOT) $(DEVKITPRO)/portlibs/wiiu $(DEVKITPRO)/portlibs/ppc
+LIBDIRS	:= $(WUT_ROOT) $(WUT_ROOT)/usr $(DEVKITPRO)/portlibs/wiiu $(DEVKITPRO)/portlibs/ppc
 
 #-------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional

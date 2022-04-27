@@ -32,7 +32,7 @@ bool io::fileExists(const std::string& path)
     return (stat(path.c_str(), &buffer) == 0);
 }
 
-void io::copyFile(const std::string& srcPath, const std::string& dstPath)
+void io::copyFile(const std::string& srcPath, const std::string& dstPath, int mode)
 {
     g_isTransferringFile = true;
 
@@ -73,16 +73,14 @@ void io::copyFile(const std::string& srcPath, const std::string& dstPath)
     fclose(src);
     fclose(dst);
 
-    // commit each file to the save
-    if (dstPath.rfind("save:/", 0) == 0) {
-        Logger::getInstance().log(Logger::ERROR, "Committing file " + dstPath + " to the save archive.");
-        //fsdevCommitDevice("save");
+    if (mode) {
+        chmod(dstPath.c_str(), mode);
     }
 
     g_isTransferringFile = false;
 }
 
-int32_t io::copyDirectory(const std::string& srcPath, const std::string& dstPath)
+int32_t io::copyDirectory(const std::string& srcPath, const std::string& dstPath, int mode)
 {
     int32_t res = 0;
     bool quit  = false;
@@ -97,27 +95,28 @@ int32_t io::copyDirectory(const std::string& srcPath, const std::string& dstPath
         std::string newdst = dstPath + items.entry(i);
 
         if (items.folder(i)) {
-            res = io::createDirectory(newdst);
+            res = io::createDirectory(newdst, mode);
             if (res == 0) {
                 newsrc += "/";
                 newdst += "/";
-                res = io::copyDirectory(newsrc, newdst);
+                res = io::copyDirectory(newsrc, newdst, mode);
             }
             else {
                 quit = true;
             }
         }
         else {
-            io::copyFile(newsrc, newdst);
+            io::copyFile(newsrc, newdst, mode);
         }
     }
 
     return 0;
 }
 
-int32_t io::createDirectory(const std::string& path)
+int32_t io::createDirectory(const std::string& path, int mode)
 {
-    mkdir(path.c_str(), 777);
+    mkdir(path.c_str(), mode ? mode : 777);
+    if (mode) chmod(path.c_str(), mode);
     return 0;
 }
 
@@ -160,7 +159,7 @@ std::tuple<bool, int32_t, std::string> io::backup(size_t index, AccountUid uid, 
     Title title;
     getTitle(title, uid, index);
 
-    Logger::getInstance().log(Logger::INFO, "Started backup of %s. Title id: 0x%016lX; User id: 0x%lX.", title.name().c_str(), title.id(),
+    Logger::getInstance().log(Logger::INFO, "Started backup of %s. Title id: 0x%llX; User id: 0x%016lX.", title.name().c_str(), title.id(),
         title.userId());
 
     std::string suggestion = DateTime::dateTimeStr() + " " +
@@ -180,7 +179,6 @@ std::tuple<bool, int32_t, std::string> io::backup(size_t index, AccountUid uid, 
                     customPath = StringUtils::removeForbiddenCharacters(keyboardResponse.second);
                 }
                 else {
-                    // FileSystem::unmount();
                     Logger::getInstance().log(Logger::INFO, "Copy operation aborted by the user through the system keyboard.");
                     return std::make_tuple(false, 0, "Operation aborted by the user.");
                 }
@@ -243,22 +241,46 @@ std::tuple<bool, int32_t, std::string> io::restore(size_t index, AccountUid uid,
     Title title;
     getTitle(title, uid, index);
 
-    Logger::getInstance().log(Logger::INFO, "Started restore of %s. Title id: 0x%016lX; User id: 0x%X.", title.name().c_str(), title.id(), title.userId());
+    Logger::getInstance().log(Logger::INFO, "Started restore of %s. Title id: 0x%016llX; User id: 0x%lX.", title.name().c_str(), title.id(), title.userId());
 
     std::string srcPath = title.fullPath(cellIndex) + "/";
     std::string dstPath = title.sourcePath() + "/";
 
-    res = io::deleteFolderRecursively(dstPath.c_str());
-    if (res != 0) {
-        Logger::getInstance().log(Logger::ERROR, "Failed to recursively delete directory " + dstPath + " with result 0x%08lX.", res);
+    Directory dir(dstPath);
+    if (!dir.good()) {
+        Logger::getInstance().log(Logger::ERROR, "Failed to recursively delete directory " + dstPath + " with result 0x%08lX.", dir.error());
         return std::make_tuple(false, res, "Failed to delete save.");
     }
+    else {
+        for (size_t i = 0; i < dir.size(); i++)  {
+            if (dir.folder(i)) {
+                std::string newpath = dstPath + "/" + dir.entry(i) + "/";
+                deleteFolderRecursively(newpath);
+                newpath = dstPath + dir.entry(i);
+                rmdir(newpath.c_str());
+            }
+            else {
+                std::string newpath = dstPath + dir.entry(i);
+                std::remove(newpath.c_str());
+            }
+        }
+    }
 
-    res = io::copyDirectory(srcPath, dstPath);
+    res = io::copyDirectory(srcPath, dstPath, 0x666); // 0x666 is required for saves to work properly
     if (res != 0) {
         Logger::getInstance().log(Logger::ERROR, "Failed to copy directory " + srcPath + " to " + dstPath + " with result 0x%08lX. Skipping...", res);
         return std::make_tuple(false, res, "Failed to restore save.");
     }
+
+    res = flushVolume("/vol/storage_mlc01");
+    if (res != 0) {
+        Logger::getInstance().log(Logger::WARN, "Failed to flush mlc");
+    }
+
+    res = flushVolume("/vol/storage_usb01");
+    if (res != 0) {
+        Logger::getInstance().log(Logger::WARN, "Failed to flush usb");
+    } 
 
     blinkLed(4);
     ret = std::make_tuple(true, 0, nameFromCell + "\nhas been restored successfully.");

@@ -6,8 +6,7 @@ AccountSelectOverlay::AccountSelectOverlay(Screen& screen, const std::function<v
     select = callbackSelectedUser;
     cancel = callbackCancel;
 
-    for (uint8_t i = 1; i <= 12; i++)
-    {
+    for (uint8_t i = 1; i <= 12; i++) {
         User user = Account::getUserFromSlot(i);
         if (user.id != 0) {
             if (user.id == g_currentUId) {
@@ -24,8 +23,7 @@ void AccountSelectOverlay::draw(void) const
     SDLH_DrawRect(0, 0, 1280, 720, COLOR_OVERLAY);
 
     int w = 128, h = 128;
-    for (uint32_t i = 0; i < users.size(); i++)
-    {
+    for (uint32_t i = 0; i < users.size(); i++) {
         int center = 1280 / 2;
         int totalWidth = users.size() * (w + 10);
         int x = center - (totalWidth / 2) + (i * (w + 10));
@@ -42,8 +40,7 @@ void AccountSelectOverlay::draw(void) const
 
         SDLH_DrawText(18, x + (w - username_w) / 2, y + h + 5, theme().c6, username.c_str());
 
-        if (i == hid.index())
-        {
+        if (i == hid.index()) {
             drawPulsingOutline(x, y, w, h + username_h + 5, 4, COLOR_BLUE);
         }
     }

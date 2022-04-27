@@ -20,8 +20,7 @@ void Input::update()
     VPADStatus vstatus;
     VPADReadError verror;
     VPADRead(VPADChan::VPAD_CHAN_0, &vstatus, 1, &verror);
-    if (verror == VPADReadError::VPAD_READ_SUCCESS)
-    {
+    if (verror == VPADReadError::VPAD_READ_SUCCESS) {
         getInstance().vpad = vstatus;
     }
 

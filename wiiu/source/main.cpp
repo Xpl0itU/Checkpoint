@@ -33,8 +33,7 @@ int main(void)
 {
     WHBProcInit();
 
-    if (servicesInit() != 0)
-    {
+    if (servicesInit() != 0) {
         servicesExit();
         WHBProcShutdown();
         return 0;
@@ -47,8 +46,7 @@ int main(void)
     // set g_currentUId to the current user
     g_currentUId = nn::act::GetPersistentId();
 
-    while (WHBProcIsRunning())
-    {
+    while (WHBProcIsRunning()) {
         g_screen->doDraw();
 
         Input::update();

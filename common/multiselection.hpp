@@ -25,6 +25,7 @@
  */
 
 #include <vector>
+#include <cstdlib>
 
 namespace MS {
     std::vector<size_t> selectedEntries(void);

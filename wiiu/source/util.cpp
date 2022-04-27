@@ -33,7 +33,6 @@ static void some_func(IOSError err, void *arg) { (void)arg; }
 void servicesExit(void)
 {
     Input::finalize();
-    Account::exit();
     freeIcons();
 
     unmount_fs("storage_mlc");
@@ -46,36 +45,33 @@ void servicesExit(void)
 
     KeyboardManager::get().shutdown();
 
-    SDLH_Exit();
-
     nn::pdm::Finalize();
 
     Account::exit();
 
+    SDLH_Exit();
+
     romfsExit();
 
     Logger::getInstance().flush();
-    WHBUnmountSdCard();
 }
 
 int32_t servicesInit(void)
 {
-    if (WHBMountSdCard())
-    {
-        io::createDirectory("wiiu");
-        io::createDirectory("wiiu/Checkpoint");
-        io::createDirectory("wiiu/Checkpoint/saves");
-    }
-    else
-    {
-        return -1;
-    }
+    io::createDirectory("wiiu");
+    io::createDirectory("wiiu/Checkpoint");
+    io::createDirectory("wiiu/Checkpoint/saves");
 
     Logger::getInstance().log(Logger::INFO, "Starting Checkpoint loading...");
 
     romfsInit();
 
     Configuration::getInstance();
+
+    if (!SDLH_Init()) {
+        Logger::getInstance().log(Logger::ERROR, "SDLH_Init failed");
+        return -1;
+    }
 
     if (!Account::init()) {
         Logger::getInstance().log(Logger::ERROR, "Account::init failed");
@@ -87,18 +83,11 @@ int32_t servicesInit(void)
         return -1;
     }
 
-    if (!SDLH_Init()) {
-        Logger::getInstance().log(Logger::ERROR, "SDLH_Init failed");
-        return -1;
-    }
-
-    if (!KeyboardManager::get().init())
-    {
+    if (!KeyboardManager::get().init()) {
         Logger::getInstance().log(Logger::ERROR, "Error initializing keyboard");
     }
 
-    if (!try_init_iosuhax())
-    {
+    if (!try_init_iosuhax()) {
         Logger::getInstance().log(Logger::ERROR, "Cannot init IOSUHAX. Make sure CFW is running");
         return -1;
     }
@@ -152,6 +141,9 @@ std::string StringUtils::removeNotAscii(std::string str)
     return str;
 }
 
+extern "C" void ACPTurnOnDrcLed(uint32_t unk, uint32_t pattern);
+#define ACP_DRC_LED_PATTERN_2 2
+
 void blinkLed(uint8_t times)
 {
     ACPTurnOnDrcLed(0, ACP_DRC_LED_PATTERN_2);
@@ -203,18 +195,18 @@ void try_shutdown_iosuhax()
         IOSUHAX_Close();
 }
 
+int flushVolume(const char* volumePath)
+{
+    return IOSUHAX_FSA_FlushVolume(fsaFd, volumePath);
+}
+
 nn::act::SlotNo accountIdToSlotNo(uint32_t accountId)
 {
-    nn::act::SlotNo number = 0;
-
-    for (uint8_t i = 1; i <= 12; i++)
-    {
-        if (nn::act::GetPersistentIdEx(i) == accountId)
-        {
-            number = i;
-            break;
+    for (uint8_t i = 1; i <= 12; i++) {
+        if (nn::act::GetPersistentIdEx(i) == accountId) {
+            return i;
         }
     }
 
-    return number;
+    return 0;
 }

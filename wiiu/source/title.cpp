@@ -237,15 +237,11 @@ void loadTitles()
         "storage_usb:/usr/save/00050002", // eShop title demo / Kiosk Interactive Demo on USB
     }; 
 
-    for (const auto& path : paths)
-    {
+    for (const auto& path : paths) {
         Directory dir(path);
-        if (dir.good())
-        {
-            for (uint32_t i = 0; i < dir.size(); i++)
-            {
-                if (dir.folder(i))
-                {
+        if (dir.good()) {
+            for (uint32_t i = 0; i < dir.size(); i++) {
+                if (dir.folder(i)) {
                     uint64_t titleId = 0;
                     std::string titleName;
                     std::string titlePublisher;
@@ -253,8 +249,7 @@ void loadTitles()
                     // Read metadata from meta.xml
                     std::string metaXmlPath = path + "/" + dir.entry(i) + "/meta/meta.xml";
                     FILE* metaXmlFile = fopen(metaXmlPath.c_str(), "rb");
-                    if (metaXmlFile)
-                    {
+                    if (metaXmlFile) {
                         // Get size
                         fseek(metaXmlFile, 0, SEEK_END);
                         size_t meta_size = ftell(metaXmlFile);
@@ -268,54 +263,47 @@ void loadTitles()
                         int res = doc.Parse(metaXml, meta_size);
                         free(metaXml);
 
-                        if (res != 0)
-                        {
+                        if (res != 0) {
                             continue;
                         }
 
                         tinyxml2::XMLElement* root = doc.FirstChildElement();
-                        if (!root)
-                        {
+                        if (!root) {
                             continue;
                         }
 
                         tinyxml2::XMLElement* titleIdElement = root->FirstChildElement("title_id");
-                        if (titleIdElement)
-                        {
+                        if (titleIdElement) {
                             const char* titleIdText = titleIdElement->GetText();
                             titleId = strtoull(titleIdText, NULL, 16);
                         }
 
-                        if (Configuration::getInstance().filter(titleId))
-                        {
+                        if (Configuration::getInstance().filter(titleId)) {
                             continue;
                         }
 
                         tinyxml2::XMLElement* titleNameElement = root->FirstChildElement("shortname_en");
-                        if (titleNameElement)
-                        {
+                        if (titleNameElement) {
                             titleName = titleNameElement->GetText();
                         }
 
                         tinyxml2::XMLElement* titlePublisherElement = root->FirstChildElement("publisher_en");
-                        if (titlePublisherElement)
-                        {
+                        if (titlePublisherElement) {
                             titlePublisher = titlePublisherElement->GetText();
                         }
                     }
-                    else
-                    {
+                    else {
                         Logger::getInstance().log(Logger::WARN, "No meta.xml for save " + path + dir.entry(i));
                         continue;
                     }
 
-                    if (titleId == 0)
+                    if (titleId == 0) {
                         continue;
+                    }
 
                     std::string iconPath = path + "/" + dir.entry(i) + "/meta/iconTex.tga";
                     FILE* iconFile = fopen(iconPath.c_str(), "rb");
-                    if (iconFile)
-                    {
+                    if (iconFile) {
                         fseek(iconFile, 0, SEEK_END);
                         size_t icon_size = ftell(iconFile);
                         rewind(iconFile);
@@ -329,25 +317,19 @@ void loadTitles()
                     }
 
                     Directory userdir(path + "/" + dir.entry(i) + "/user");
-                    if (userdir.good())
-                    {
-                        for (uint32_t j = 0; j < userdir.size(); j++)
-                        {
-                            if (userdir.folder(j))
-                            {
+                    if (userdir.good()) {
+                        for (uint32_t j = 0; j < userdir.size(); j++) {
+                            if (userdir.folder(j)) {
                                 AccountUid uid = 0;
 
                                 // common save
-                                if (std::strcmp(userdir.entry(j).c_str(), "common") == 0)
-                                {
+                                if (std::strcmp(userdir.entry(j).c_str(), "common") == 0) {
                                     uid = COMMONSAVE_ID;
                                 }
-                                else
-                                {
+                                else {
                                     char* ptr;
                                     uid = (AccountUid) strtoul(userdir.entry(j).c_str(), &ptr, 16);
-                                    if (!ptr)
-                                    {
+                                    if (!ptr) {
                                         continue;
                                     }
                                 }
@@ -356,11 +338,9 @@ void loadTitles()
                                 title.init(titleId, uid, titleName, titlePublisher);
                                 title.sourcePath(path + "/" + dir.entry(i) + "/user/" + userdir.entry(j));
 
-                                if (uid != COMMONSAVE_ID)
-                                {
+                                if (uid != COMMONSAVE_ID) {
                                     nn::act::SlotNo accountSlot = accountIdToSlotNo(uid);
-                                    if (accountSlot > 0)
-                                    {
+                                    if (accountSlot > 0) {
                                         // load play statistics
                                         nn::pdm::PlayStats stats;
                                         uint32_t res = nn::pdm::GetPlayStatsOfTitleId(&stats, accountSlot, titleId);
@@ -371,13 +351,11 @@ void loadTitles()
 
                                 // check if the vector is already created
                                 std::unordered_map<AccountUid, std::vector<Title>>::iterator it = titles.find(uid);
-                                if (it != titles.end()) 
-                                {
+                                if (it != titles.end())  {
                                     // found
                                     it->second.push_back(title);
                                 }
-                                else 
-                                {
+                                else  {
                                     // not found, insert into map
                                     std::vector<Title> v;
                                     v.push_back(title);
@@ -398,15 +376,11 @@ void loadTitles()
         "slccmpt:/title/00010001"                             // Downloaded channels
     }; 
 
-    for (const auto& path : vWiiPaths)
-    {
+    for (const auto& path : vWiiPaths) {
         Directory dir(path);
-        if (dir.good())
-        {
-            for (uint32_t i = 0; i < dir.size(); i++)
-            {
-                if (dir.folder(i))
-                {
+        if (dir.good()) {
+            for (uint32_t i = 0; i < dir.size(); i++) {
+                if (dir.folder(i)) {
                     
                 }
             }

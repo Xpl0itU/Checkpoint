@@ -52,9 +52,9 @@ namespace io {
     std::tuple<bool, int32_t, std::string> backup(size_t index, AccountUid uid, size_t cellIndex);
     std::tuple<bool, int32_t, std::string> restore(size_t index, AccountUid uid, size_t cellIndex, const std::string& nameFromCell);
 
-    int32_t copyDirectory(const std::string& srcPath, const std::string& dstPath);
-    void copyFile(const std::string& srcPath, const std::string& dstPath);
-    int32_t createDirectory(const std::string& path);
+    int32_t copyDirectory(const std::string& srcPath, const std::string& dstPath, int mode = 0);
+    void copyFile(const std::string& srcPath, const std::string& dstPath, int mode = 0);
+    int32_t createDirectory(const std::string& path, int mode = 0);
     int32_t deleteFolderRecursively(const std::string& path);
     bool directoryExists(const std::string& path);
     bool fileExists(const std::string& path);

@@ -36,7 +36,9 @@ bool Account::init(void)
 void Account::exit(void)
 {
     for (auto& value : mUsers) {
-        SDL_DestroyTexture(value.second.icon);
+        if (value.second.icon) {
+            SDL_DestroyTexture(value.second.icon);
+        }
     }
     nn::act::Finalize();
 }
@@ -55,8 +57,7 @@ User Account::getUser(AccountUid id)
     User user{id, "", "", NULL};
 
     nn::act::SlotNo slotNo = accountIdToSlotNo(id);
-    if (slotNo != 0)
-    {
+    if (slotNo != 0) {
         return getUserFromSlot(slotNo);
     }
 
@@ -67,8 +68,7 @@ User Account::getUserFromSlot(nn::act::SlotNo slot)
 {
     User user{0, "", "", NULL};
 
-    if (nn::act::IsSlotOccupied(slot))
-    {
+    if (nn::act::IsSlotOccupied(slot)) {
         user.id = nn::act::GetPersistentIdEx(slot);
 
         // Get the mii name because not every account has a NNID linked
@@ -85,8 +85,7 @@ User Account::getUserFromSlot(nn::act::SlotNo slot)
         uint8_t* buffer = (uint8_t*) malloc(MAX_IMAGE_SIZE);
         size_t image_size = 0;
         nn::act::GetMiiImageEx(&image_size, buffer, MAX_IMAGE_SIZE, 0, slot);
-        if (image_size > 0)
-        {
+        if (image_size > 0) {
             SDLH_LoadImage(&user.icon, buffer, image_size, true);
         }
         free(buffer);
