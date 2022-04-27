@@ -119,6 +119,7 @@ void KeyboardManager::update()
     }
 
     // draw keyboard
+    SDLH_ClearScreen(theme().c1);
     nn::swkbd::DrawDRC();
     nn::swkbd::DrawTV();
     SDLH_Render();
