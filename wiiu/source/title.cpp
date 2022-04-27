@@ -262,9 +262,9 @@ void loadTitles()
                         mxml_node_t *xt = NULL;
                         xt = mxmlLoadString(NULL, metaXml, MXML_OPAQUE_CALLBACK);
                         mxml_node_t *xm = mxmlGetFirstChild(xt);
-                        mxml_node_t *xn = mxmlFindElement(xm, xt, "title_id", "type", "string", MXML_DESCEND);
+                        mxml_node_t *xn = mxmlFindElement(xm, xt, "title_id", "type", "hexBinary", MXML_DESCEND);
                         if(xn) {
-                            titleId = strtoull(mxmlGetOpaque(xn), NULL, 16);
+                            titleId = (uint64_t)mxmlGetOpaque(xn);
                         }
 
                         if (Configuration::getInstance().filter(titleId)) {
@@ -273,12 +273,12 @@ void loadTitles()
 
                         xn = mxmlFindElement(xm, xt, "shortname_en", "type", "string", MXML_DESCEND);
                         if(xn) {
-                            titleName = strtoull(mxmlGetOpaque(xn), NULL, 16);
+                            titleName.assign(mxmlGetOpaque(xn));
                         }
 
                         xn = mxmlFindElement(xm, xt, "publisher_en", "type", "string", MXML_DESCEND);
                         if(xn) {
-                            titlePublisher = strtoull(mxmlGetOpaque(xn), NULL, 16);
+                            titlePublisher.assign(mxmlGetOpaque(xn));
                         }
                     }
                     else {
