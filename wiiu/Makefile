@@ -23,12 +23,10 @@ OUTDIR		:=  out
 BUILD		:=	build
 SOURCES		:=	source \
 				../common \
-				../3rd-party/tinyxml2
 DATA		:=	data
 INCLUDES	:=	include \
 				../common \
 				../3rd-party/json \
-				../3rd-party/tinyxml2
 ROMFS		:=	romfs
 
 #-------------------------------------------------------------------------------
@@ -47,7 +45,7 @@ CXXFLAGS	:= $(CFLAGS) -std=gnu++17
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lSDL2_ttf -lSDL2_image -lSDL2 -lfreetype -ljpeg -lpng -lbz2 -lz -liosuhax -lwut
+LIBS	:= `$(PREFIX)pkg-config --libs SDL2_ttf SDL2_image mxml` -lfreetype -ljpeg -lpng -lbz2 -lz -liosuhax -lwut
 
 #-------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level

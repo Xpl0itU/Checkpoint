@@ -259,37 +259,26 @@ void loadTitles()
                         fread(metaXml, 1, meta_size, metaXmlFile);
                         fclose(metaXmlFile);
 
-                        tinyxml2::XMLDocument doc;
-                        int res = doc.Parse(metaXml, meta_size);
-                        free(metaXml);
-
-                        if (res != 0) {
-                            continue;
-                        }
-
-                        tinyxml2::XMLElement* root = doc.FirstChildElement();
-                        if (!root) {
-                            continue;
-                        }
-
-                        tinyxml2::XMLElement* titleIdElement = root->FirstChildElement("title_id");
-                        if (titleIdElement) {
-                            const char* titleIdText = titleIdElement->GetText();
-                            titleId = strtoull(titleIdText, NULL, 16);
+                        mxml_node_t *xt = NULL;
+                        xt = mxmlLoadString(NULL, metaXml, MXML_OPAQUE_CALLBACK);
+                        mxml_node_t *xm = mxmlGetFirstChild(xt);
+                        mxml_node_t *xn = mxmlFindElement(xm, xt, "title_id", "type", "string", MXML_DESCEND);
+                        if(xn) {
+                            titleId = strtoull(mxmlGetOpaque(xn), NULL, 16);
                         }
 
                         if (Configuration::getInstance().filter(titleId)) {
                             continue;
                         }
 
-                        tinyxml2::XMLElement* titleNameElement = root->FirstChildElement("shortname_en");
-                        if (titleNameElement) {
-                            titleName = titleNameElement->GetText();
+                        xn = mxmlFindElement(xm, xt, "shortname_en", "type", "string", MXML_DESCEND);
+                        if(xn) {
+                            titleName = strtoull(mxmlGetOpaque(xn), NULL, 16);
                         }
 
-                        tinyxml2::XMLElement* titlePublisherElement = root->FirstChildElement("publisher_en");
-                        if (titlePublisherElement) {
-                            titlePublisher = titlePublisherElement->GetText();
+                        xn = mxmlFindElement(xm, xt, "publisher_en", "type", "string", MXML_DESCEND);
+                        if(xn) {
+                            titlePublisher = strtoull(mxmlGetOpaque(xn), NULL, 16);
                         }
                     }
                     else {
